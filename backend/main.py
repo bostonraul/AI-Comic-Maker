@@ -25,7 +25,9 @@ app = FastAPI(title="AI Comic Factory API", version="1.0.0")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[
+        "https://reimagined-bassoon-6wqrx9w47rxhxxpr-3000.app.github.dev"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
