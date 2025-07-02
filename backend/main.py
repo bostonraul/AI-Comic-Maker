@@ -25,9 +25,7 @@ app = FastAPI(title="AI Comic Factory API", version="1.0.0")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://reimagined-bassoon-6wqrx9w47rxhxxpr-3000.app.github.dev"
-    ],
+    allow_origins=["*"],  # Allow all origins for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -69,11 +67,11 @@ async def generate_prompts(request: ComicRequest):
             characters=request.characters
         )
         
-        return ComicResponse(
-            success=True,
-            message="Prompts generated successfully",
-            prompts=prompts
-        )
+        return {
+            "success": True,
+            "message": "Prompts generated successfully",
+            "prompts": prompts
+        }
     except Exception as e:
         logger.error(f"Error generating prompts: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate prompts: {str(e)}")

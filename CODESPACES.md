@@ -32,7 +32,6 @@ Once Codespaces opens, you'll need to add your API keys:
 # API Keys
 OPENAI_API_KEY=sk-your_actual_openai_key_here
 REPLICATE_API_KEY=r8_your_actual_replicate_key_here
-HF_API_TOKEN=your_huggingface_token_here
 
 # Rendering Engine Configuration
 RENDERING_ENGINE=REPLICATE
