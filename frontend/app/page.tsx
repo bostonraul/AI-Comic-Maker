@@ -79,7 +79,7 @@ export default function Home() {
     setError('');
 
     try {
-      const response = await axios.post(`${apiUrl}/generate-comic`, { prompts });
+      const response = await axios.post(`${apiUrl}/generate-comic`, { prompts }, { timeout: 600000 });
       const data: ComicResponse = response.data;
       
       if (data.success) {

@@ -28,39 +28,13 @@ class ComicGenerator:
     
     async def generate_images(self, prompts: List[str], output_dir: str) -> List[str]:
         """
-        Generate images from prompts using the configured rendering engine
+        Generate images from prompts using the configured rendering engine, in parallel
         """
-        image_paths = []
-        
-        for i, prompt in enumerate(prompts):
-            try:
-                logger.info(f"Generating image {i+1}/10: {prompt[:50]}...")
-                
-                image_path = await self._generate_single_image(
-                    prompt=prompt,
-                    output_dir=output_dir,
-                    panel_number=i+1
-                )
-                
-                if image_path:
-                    image_paths.append(image_path)
-                    logger.info(f"Successfully generated image {i+1}/10")
-                else:
-                    logger.error(f"Failed to generate image {i+1}/10")
-                    # Create a placeholder image
-                    placeholder_path = self._create_placeholder_image(output_dir, i+1, prompt)
-                    image_paths.append(placeholder_path)
-                
-                # Add a small delay between generations to avoid rate limiting
-                await asyncio.sleep(1)
-                
-            except Exception as e:
-                logger.error(f"Error generating image {i+1}/10: {str(e)}")
-                # Create a placeholder image on error
-                placeholder_path = self._create_placeholder_image(output_dir, i+1, prompt)
-                image_paths.append(placeholder_path)
-        
-        return image_paths
+        tasks = [
+            self._generate_single_image(prompt, output_dir, i)
+            for i, prompt in enumerate(prompts)
+        ]
+        return await asyncio.gather(*tasks)
     
     async def _generate_single_image(self, prompt: str, output_dir: str, panel_number: int) -> str:
         """
