@@ -50,6 +50,7 @@ class ComicResponse(BaseModel):
     zip_url: Optional[str] = None
     pdf_url: Optional[str] = None
     error: Optional[str] = None
+    prompts: Optional[List[str]] = None
 
 @app.get("/")
 async def root():
