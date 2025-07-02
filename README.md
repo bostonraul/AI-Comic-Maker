@@ -13,7 +13,319 @@ hf_oauth_expiration_minutes: 43200
 hf_oauth_scopes: [inference-api]
 ---
 
-# AI Comic Factory
+# AI Comic Factory - Complete Application
+
+A full-stack application that generates AI-powered comics from user input. The app uses ChatGPT to generate 10 illustration prompts based on genre, setting, and characters, then creates comic images using AI image generation APIs, and finally assembles them into a PDF comic.
+
+## 🚀 Features
+
+- **Smart Prompt Generation**: Uses ChatGPT to create 10 unique illustration prompts
+- **AI Image Generation**: Supports multiple rendering engines (Replicate, OpenAI DALL-E, Hugging Face)
+- **PDF Assembly**: Automatically creates a comic PDF with images and captions
+- **ZIP Download**: Provides both individual images and assembled PDF in a ZIP file
+- **Modern UI**: Beautiful React frontend with Tailwind CSS
+- **FastAPI Backend**: High-performance Python backend with async support
+
+## 🏗️ Architecture
+
+```
+User Input (Genre, Setting, Characters)
+    ↓
+ChatGPT → 10 Illustration Prompts
+    ↓
+AI Image Generation (Replicate/OpenAI/Hugging Face)
+    ↓
+PDF Assembly with Captions
+    ↓
+ZIP File Download
+```
+
+## 📁 Project Structure
+
+```
+ai-comic-factory/
+├── backend/                 # FastAPI backend
+│   ├── main.py             # Main FastAPI application
+│   ├── services/           # Business logic services
+│   │   ├── chatgpt_service.py
+│   │   ├── comic_generator.py
+│   │   └── pdf_generator.py
+│   ├── requirements.txt    # Python dependencies
+│   └── env.example        # Environment variables template
+├── frontend/               # Next.js frontend
+│   ├── app/               # Next.js app directory
+│   │   ├── page.tsx       # Main page component
+│   │   ├── layout.tsx     # Root layout
+│   │   └── globals.css    # Global styles
+│   ├── package.json       # Node.js dependencies
+│   └── tailwind.config.js # Tailwind configuration
+└── README.md              # This file
+```
+
+## 🛠️ Installation & Setup
+
+### Option 1: GitHub Codespaces (Recommended) 🚀
+
+**Easiest way to get started - no local setup required!**
+
+1. **Fork this repository** to your GitHub account
+2. **Open in Codespaces**: Click the green "Code" button → "Codespaces" → "Create codespace on main"
+3. **Add your API keys** to `backend/.env` (see [CODESPACES.md](CODESPACES.md) for detailed instructions)
+4. **Start the app**: Use the provided scripts or run manually
+
+**✅ Benefits:**
+- No local installation required
+- Automatic dependency installation
+- Pre-configured development environment
+- Free cloud development environment
+
+### Option 2: Local Development
+
+### Prerequisites
+
+- Python 3.8+
+- Node.js 18+
+- API keys for:
+  - OpenAI (for ChatGPT and DALL-E)
+  - Replicate (for SDXL)
+  - Hugging Face (optional)
+
+### Backend Setup
+
+1. **Navigate to backend directory:**
+   ```bash
+   cd backend
+   ```
+
+2. **Create virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Set up environment variables:**
+   ```bash
+   cp env.example .env
+   # Edit .env with your API keys
+   ```
+
+5. **Run the backend:**
+   ```bash
+   python main.py
+   ```
+
+The backend will be available at `http://localhost:8000`
+
+### Frontend Setup
+
+1. **Navigate to frontend directory:**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Run the frontend:**
+   ```bash
+   npm run dev
+   ```
+
+The frontend will be available at `http://localhost:3000`
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the backend directory:
+
+```env
+# API Keys
+OPENAI_API_KEY=your_openai_api_key_here
+REPLICATE_API_KEY=your_replicate_api_key_here
+HF_API_TOKEN=your_huggingface_token_here
+
+# Rendering Engine Configuration
+# Options: REPLICATE, OPENAI, HUGGINGFACE
+RENDERING_ENGINE=REPLICATE
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+
+# Logging
+LOG_LEVEL=INFO
+```
+
+### API Keys Setup
+
+1. **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/)
+2. **Replicate API Key**: Get from [Replicate](https://replicate.com/)
+3. **Hugging Face Token**: Get from [Hugging Face](https://huggingface.co/settings/tokens)
+
+## 🎯 Usage
+
+1. **Open the application** at `http://localhost:3000`
+
+2. **Fill in the form** with:
+   - **Genre**: e.g., "Sci-Fi", "Fantasy", "Mystery"
+   - **Setting**: e.g., "Space Station", "Medieval Castle"
+   - **Characters**: e.g., "Robot detective", "Wizard apprentice"
+
+3. **Generate Prompts**: Click "Generate 10 Illustration Prompts" to get AI-generated prompts
+
+4. **Generate Comic**: Click "Generate Comic" to create images and PDF
+
+5. **Download**: Get your comic as a ZIP file containing all images and the assembled PDF
+
+## 🔌 API Endpoints
+
+### Backend API
+
+- `POST /generate-prompts` - Generate 10 illustration prompts
+- `POST /generate-comic` - Generate comic images and PDF
+- `GET /download/{filename}` - Download generated files
+
+### Request Examples
+
+**Generate Prompts:**
+```json
+{
+  "genre": "Sci-Fi",
+  "setting": "Space Station",
+  "characters": "Robot detective"
+}
+```
+
+**Generate Comic:**
+```json
+{
+  "prompts": [
+    "A robot detective examining evidence in a futuristic space station",
+    "The detective discovering a mysterious alien artifact",
+    "..."
+  ]
+}
+```
+
+## 🎨 Customization
+
+### Adding New Rendering Engines
+
+To add a new image generation service, modify `backend/services/comic_generator.py`:
+
+1. Add the new engine to the `_generate_single_image` method
+2. Create a new method like `_generate_with_newservice`
+3. Update the environment variables
+
+### Customizing PDF Layout
+
+Modify `backend/services/pdf_generator.py` to change:
+- Page layout and styling
+- Image sizes and positioning
+- Caption formatting
+- Color schemes
+
+### Frontend Styling
+
+The frontend uses Tailwind CSS. Modify:
+- `frontend/tailwind.config.js` for theme customization
+- `frontend/app/globals.css` for global styles
+- Component files for specific styling
+
+## 🚀 Deployment
+
+### Backend Deployment
+
+The backend can be deployed to:
+- **Heroku**: Use the provided `requirements.txt`
+- **Railway**: Direct deployment from GitHub
+- **DigitalOcean App Platform**: Container deployment
+- **AWS/GCP**: Container deployment with Docker
+
+### Frontend Deployment
+
+The frontend can be deployed to:
+- **Vercel**: Direct deployment from GitHub
+- **Netlify**: Build and deploy
+- **AWS S3 + CloudFront**: Static hosting
+
+### Docker Deployment
+
+Create a `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REPLICATE_API_KEY=${REPLICATE_API_KEY}
+  
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **API Key Errors**: Ensure all API keys are correctly set in `.env`
+2. **Image Generation Fails**: Check API quotas and rate limits
+3. **PDF Generation Issues**: Ensure all image files exist and are readable
+4. **CORS Errors**: Verify the backend CORS configuration matches your frontend URL
+
+### Logs
+
+Check the backend logs for detailed error information:
+```bash
+# Backend logs
+python main.py
+
+# Frontend logs
+npm run dev
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🙏 Acknowledgments
+
+- Original AI Comic Factory by [@jbilcke-hf](https://github.com/jbilcke-hf)
+- Stable Diffusion XL by Stability AI
+- ChatGPT by OpenAI
+- Next.js and FastAPI communities
+
+## 📞 Support
+
+For issues and questions:
+1. Check the troubleshooting section
+2. Review the logs for error details
+3. Open an issue on GitHub
+4. Check the original AI Comic Factory documentation
 
 Last release: AI Comic Factory 1.2
 

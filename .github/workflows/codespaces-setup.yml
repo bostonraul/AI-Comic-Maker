@@ -1,0 +1,39 @@
+name: Codespaces Setup
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install Python dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+      
+      - name: Install Node.js dependencies
+        run: |
+          cd frontend
+          npm install
+      
+      - name: Verify setup
+        run: |
+          echo "✅ Setup verification complete!"
+          echo "🚀 Ready for Codespaces deployment" 
