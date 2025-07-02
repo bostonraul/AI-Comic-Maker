@@ -135,19 +135,17 @@ async def generate_comic(request: GenerateComicRequest, background_tasks: Backgr
 
 @app.get("/download/{filename}")
 async def download_file(filename: str):
-    """Download generated files"""
-    # This is a simplified version - in production you'd want proper file storage
     temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, filename)
-    
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    return FileResponse(
-        path=file_path,
-        filename=filename,
-        media_type='application/octet-stream'
-    )
+    # Search all subdirectories for the file
+    for root, dirs, files in os.walk(temp_dir):
+        if filename in files:
+            file_path = os.path.join(root, filename)
+            return FileResponse(
+                path=file_path,
+                filename=filename,
+                media_type='application/octet-stream'
+            )
+    raise HTTPException(status_code=404, detail="File not found")
 
 async def cleanup_temp_files(temp_dir: str, delay_seconds: int):
     """Clean up temporary files after delay"""
