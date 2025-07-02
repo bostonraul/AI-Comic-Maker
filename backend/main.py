@@ -119,6 +119,9 @@ async def generate_comic(request: GenerateComicRequest, background_tasks: Backgr
         with zipfile.ZipFile(zip_path, 'a') as zipf:
             zipf.write(pdf_path, pdf_filename)
         
+        # Add a short delay to ensure files are accessible
+        await asyncio.sleep(1)
+        
         # Schedule cleanup
         background_tasks.add_task(cleanup_temp_files, temp_dir, 3600)  # Clean up in 1 hour
         
