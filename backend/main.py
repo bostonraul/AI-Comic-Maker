@@ -79,24 +79,23 @@ async def generate_prompts(request: ComicRequest):
 
 @app.post("/generate-comic", response_model=ComicResponse)
 async def generate_comic(request: GenerateComicRequest, background_tasks: BackgroundTasks):
-    """Generate comic images from prompts and return ZIP file"""
+    """Generate comic images from prompts and return ZIP file (TEMP: only 2 images for dev)"""
     try:
         logger.info(f"Generating comic with {len(request.prompts)} prompts")
         
-        if len(request.prompts) != 10:
-            raise HTTPException(status_code=400, detail="Exactly 10 prompts are required")
+        # TEMP: Only use the first 2 prompts for faster dev/testing
+        prompts_to_use = request.prompts[:2]
+        if len(prompts_to_use) != 2:
+            raise HTTPException(status_code=400, detail="Exactly 2 prompts are required for dev mode")
         
-        # Create temporary directory for this generation
         temp_dir = tempfile.mkdtemp(prefix="comic_")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        # Generate images
         image_paths = await comic_generator.generate_images(
-            prompts=request.prompts,
+            prompts=prompts_to_use,
             output_dir=temp_dir
         )
         
-        # Create ZIP file
         zip_filename = f"comic_{timestamp}.zip"
         zip_path = os.path.join(temp_dir, zip_filename)
         
@@ -105,25 +104,20 @@ async def generate_comic(request: GenerateComicRequest, background_tasks: Backgr
                 if os.path.exists(image_path):
                     zipf.write(image_path, f"panel_{i+1:02d}.png")
         
-        # Create PDF with captions
         pdf_filename = f"comic_{timestamp}.pdf"
         pdf_path = os.path.join(temp_dir, pdf_filename)
         
         await pdf_generator.create_comic_pdf(
             image_paths=image_paths,
-            prompts=request.prompts,
+            prompts=prompts_to_use,
             output_path=pdf_path
         )
         
-        # Add PDF to ZIP
         with zipfile.ZipFile(zip_path, 'a') as zipf:
             zipf.write(pdf_path, pdf_filename)
         
-        # Add a short delay to ensure files are accessible
         await asyncio.sleep(1)
-        
-        # Schedule cleanup
-        background_tasks.add_task(cleanup_temp_files, temp_dir, 3600)  # Clean up in 1 hour
+        background_tasks.add_task(cleanup_temp_files, temp_dir, 3600)
         
         return ComicResponse(
             success=True,
@@ -131,7 +125,6 @@ async def generate_comic(request: GenerateComicRequest, background_tasks: Backgr
             zip_url=f"/download/{zip_filename}",
             pdf_url=f"/download/{pdf_filename}"
         )
-        
     except Exception as e:
         logger.error(f"Error generating comic: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate comic: {str(e)}")
