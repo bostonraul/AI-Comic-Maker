@@ -8,6 +8,7 @@ from PIL import Image
 import io
 import base64
 from dotenv import load_dotenv
+from PIL import ImageDraw, ImageFont
 
 load_dotenv()
 
@@ -55,17 +56,18 @@ class ComicGenerator:
             logger.error(f"Error in _generate_single_image: {str(e)}")
             return self._create_placeholder_image(output_dir, panel_number, prompt)
     
-    async def _generate_with_replicate(self, prompt: str, output_dir: str, panel_number: int) -> str:
+    async def _generate_with_replicate(self, prompt: str, output_dir: str, panel_number: int, dialogue: str = "") -> str:
         """
-        Generate image using Replicate API
+        Generate image using Replicate API, with comic style and dialogue instructions
         """
         try:
             # Use SDXL model for high-quality comic-style images
+            full_prompt = f"comic book style, {prompt}, high quality, detailed illustration, speech bubble with dialogue: '{dialogue}'"
             output = self.replicate_client.run(
                 "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 input={
-                    "prompt": f"comic book style, {prompt}, high quality, detailed illustration",
-                    "negative_prompt": "speech bubble, caption, subtitle, text, watermark",
+                    "prompt": full_prompt,
+                    "negative_prompt": "watermark, blurry, low quality",
                     "width": 1024,
                     "height": 1024,
                     "num_outputs": 1,
@@ -73,13 +75,14 @@ class ComicGenerator:
                     "num_inference_steps": 30
                 }
             )
-            
             if output and len(output) > 0:
                 image_url = output[0]
-                return await self._download_and_save_image(image_url, output_dir, panel_number)
+                image_path = await self._download_and_save_image(image_url, output_dir, panel_number)
+                if dialogue:
+                    self.overlay_speech_bubble(image_path, dialogue)
+                return image_path
             else:
                 raise Exception("No output received from Replicate")
-                
         except Exception as e:
             logger.error(f"Error generating with Replicate: {str(e)}")
             raise
@@ -176,8 +179,6 @@ class ComicGenerator:
             image = Image.new('RGB', (width, height), color='#f0f0f0')
             
             # Add some text to indicate it's a placeholder
-            from PIL import ImageDraw, ImageFont
-            
             draw = ImageDraw.Draw(image)
             
             # Try to use a default font, fallback to basic if not available
@@ -203,4 +204,29 @@ class ComicGenerator:
         except Exception as e:
             logger.error(f"Error creating placeholder image: {str(e)}")
             # Return a path even if creation fails
-            return os.path.join(output_dir, f"panel_{panel_number:02d}.png") 
+            return os.path.join(output_dir, f"panel_{panel_number:02d}.png")
+    
+    def overlay_speech_bubble(self, image_path: str, dialogue: str):
+        """
+        Overlay a simple speech bubble with dialogue on the image using PIL
+        """
+        try:
+            image = Image.open(image_path)
+            draw = ImageDraw.Draw(image)
+            width, height = image.size
+            # Bubble position and size
+            bubble_w, bubble_h = int(width * 0.7), int(height * 0.18)
+            bubble_x, bubble_y = int(width * 0.15), int(height * 0.05)
+            # Draw bubble
+            draw.ellipse([bubble_x, bubble_y, bubble_x + bubble_w, bubble_y + bubble_h], fill=(255,255,255,230), outline=(0,0,0), width=3)
+            # Draw text
+            try:
+                font = ImageFont.truetype("arial.ttf", 36)
+            except:
+                font = ImageFont.load_default()
+            text_x = bubble_x + 20
+            text_y = bubble_y + bubble_h//3
+            draw.text((text_x, text_y), dialogue, fill=(0,0,0), font=font)
+            image.save(image_path)
+        except Exception as e:
+            logger.error(f"Error overlaying speech bubble: {str(e)}") 

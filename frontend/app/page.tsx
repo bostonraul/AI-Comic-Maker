@@ -10,6 +10,8 @@ interface ComicRequest {
   genre: string;
   setting: string;
   characters: string;
+  characterNames: string;
+  dialogues?: string[];
 }
 
 interface ComicResponse {
@@ -26,6 +28,8 @@ export default function Home() {
     genre: '',
     setting: '',
     characters: '',
+    characterNames: '',
+    dialogues: Array(2).fill(''), // For dev, 2 panels
   });
   
   const [prompts, setPrompts] = useState<string[]>([]);
@@ -132,7 +136,7 @@ export default function Home() {
               Comic Creation Form
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Genre
@@ -174,6 +178,42 @@ export default function Home() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Character Names
+                </label>
+                <input
+                  type="text"
+                  name="characterNames"
+                  value={formData.characterNames}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Roy, Alice, Bob"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Optional: Dialogue fields for each panel */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dialogue for each panel (optional)
+              </label>
+              {formData.dialogues?.map((dialogue, idx) => (
+                <input
+                  key={idx}
+                  type="text"
+                  name={`dialogue_${idx}`}
+                  value={dialogue}
+                  onChange={e => {
+                    const newDialogues = [...(formData.dialogues || [])];
+                    newDialogues[idx] = e.target.value;
+                    setFormData(prev => ({ ...prev, dialogues: newDialogues }));
+                  }}
+                  placeholder={`Panel ${idx + 1} dialogue`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+                />
+              ))}
             </div>
 
             <button

@@ -26,88 +26,10 @@ class PDFGenerator:
         output_path: str
     ) -> str:
         """
-        Create a comic PDF with images and captions
+        Create a comic PDF with images and captions in a 2x2 grid per page
         """
-        try:
-            logger.info(f"Creating comic PDF with {len(image_paths)} images")
-            
-            # Create the PDF document
-            doc = SimpleDocTemplate(
-                output_path,
-                pagesize=A4,
-                rightMargin=self.margin,
-                leftMargin=self.margin,
-                topMargin=self.margin,
-                bottomMargin=self.margin
-            )
-            
-            # Get styles
-            styles = getSampleStyleSheet()
-            
-            # Create custom styles for comic
-            title_style = ParagraphStyle(
-                'ComicTitle',
-                parent=styles['Heading1'],
-                fontSize=24,
-                spaceAfter=20,
-                alignment=TA_CENTER,
-                textColor=colors.darkblue
-            )
-            
-            caption_style = ParagraphStyle(
-                'ComicCaption',
-                parent=styles['Normal'],
-                fontSize=10,
-                spaceAfter=10,
-                alignment=TA_LEFT,
-                textColor=colors.black
-            )
-            
-            # Build the story
-            story = []
-            
-            # Add title
-            story.append(Paragraph("AI Generated Comic", title_style))
-            story.append(Spacer(1, 20))
-            
-            # Process images and prompts
-            for i, (image_path, prompt) in enumerate(zip(image_paths, prompts)):
-                if os.path.exists(image_path):
-                    try:
-                        # Add panel number
-                        panel_title = Paragraph(f"Panel {i+1}", styles['Heading2'])
-                        story.append(panel_title)
-                        story.append(Spacer(1, 10))
-                        
-                        # Add image
-                        img = RLImage(image_path, width=self.image_width, height=self.image_height)
-                        story.append(img)
-                        story.append(Spacer(1, 10))
-                        
-                        # Add caption
-                        caption = Paragraph(f"<b>Scene:</b> {prompt}", caption_style)
-                        story.append(caption)
-                        story.append(Spacer(1, 20))
-                        
-                    except Exception as e:
-                        logger.error(f"Error processing image {i+1}: {str(e)}")
-                        # Add placeholder text
-                        story.append(Paragraph(f"Panel {i+1} - Image could not be loaded", styles['Normal']))
-                        story.append(Spacer(1, 20))
-                else:
-                    logger.warning(f"Image file not found: {image_path}")
-                    story.append(Paragraph(f"Panel {i+1} - Image file missing", styles['Normal']))
-                    story.append(Spacer(1, 20))
-            
-            # Build the PDF
-            doc.build(story)
-            
-            logger.info(f"Comic PDF created successfully: {output_path}")
-            return output_path
-            
-        except Exception as e:
-            logger.error(f"Error creating comic PDF: {str(e)}")
-            raise
+        # Use the simple grid layout for all comics
+        return self.create_simple_comic_pdf(image_paths, prompts, output_path)
     
     def create_simple_comic_pdf(
         self, 
