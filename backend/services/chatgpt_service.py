@@ -22,33 +22,14 @@ class ChatGPTService:
         genre: str, 
         setting: str, 
         characters: str
-    ) -> List[str]:
+    ) -> List[dict]:
         """
-        Generate 10 illustration prompts using ChatGPT based on user input
+        Generate 10 illustration prompts and dialogue using ChatGPT based on user input
         """
         try:
-            system_prompt = """You are a creative comic book illustrator and storyteller. 
-            Your task is to generate exactly 10 detailed illustration prompts for a comic book.
-            
-            Each prompt should be:
-            - Descriptive and vivid
-            - Suitable for AI image generation
-            - Tell a story progression
-            - Include visual details like lighting, composition, character poses
-            - Be 1-2 sentences long
-            - Focus on visual storytelling
-            
-            Return ONLY a JSON array of 10 strings, no other text.
-            Example format: ["prompt 1", "prompt 2", ..., "prompt 10"]"""
-            
-            user_prompt = f"""Create 10 illustration prompts for a comic book with:
-            Genre: {genre}
-            Setting: {setting}
-            Characters: {characters}
-            
-            The prompts should tell a complete story arc from beginning to end.
-            Make sure each prompt is visually distinct and progresses the narrative."""
-            
+            system_prompt = """You are a creative comic book illustrator and storyteller. \
+            Your task is to generate exactly 10 detailed illustration prompts for a comic book.\n\n            For each panel, provide:\n            - 'description': a vivid, visual prompt for AI image generation (1-2 sentences)\n            - 'dialogue': a short line of character dialogue or speech bubble (1 sentence, in quotes)\n\n            Return ONLY a JSON array of 10 objects, each with 'description' and 'dialogue'.\n            Example format: [\n              {\"description\": \"A robot detective in a space station...\", \"dialogue\": \"We have a problem!\"},\n              ...\n            ]\n            No other text.\n            """
+            user_prompt = f"""Create 10 comic panels for:\n            Genre: {genre}\n            Setting: {setting}\n            Characters: {characters}\n\n            Each panel should progress the story.\n            """
             response = self.client.chat.completions.create(
                 model="gpt-4",
                 messages=[
@@ -56,27 +37,19 @@ class ChatGPTService:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.8,
-                max_tokens=1000
+                max_tokens=1500
             )
-            
             content = response.choices[0].message.content.strip()
-            
             # Try to parse as JSON
             try:
                 prompts = json.loads(content)
-                if isinstance(prompts, list) and len(prompts) == 10:
-                    logger.info(f"Successfully generated {len(prompts)} prompts")
+                if isinstance(prompts, list) and len(prompts) == 10 and all('description' in p and 'dialogue' in p for p in prompts):
+                    logger.info(f"Successfully generated {len(prompts)} prompts with dialogue")
                     return prompts
                 else:
-                    raise ValueError("Response is not a list of 10 prompts")
+                    raise ValueError("Response is not a list of 10 objects with description and dialogue")
             except json.JSONDecodeError:
-                # If JSON parsing fails, try to extract prompts from text
-                prompts = self._extract_prompts_from_text(content)
-                if len(prompts) == 10:
-                    return prompts
-                else:
-                    raise ValueError(f"Could not extract exactly 10 prompts from response")
-                    
+                raise ValueError("Could not parse ChatGPT response as JSON")
         except Exception as e:
             logger.error(f"Error generating prompts: {str(e)}")
             raise

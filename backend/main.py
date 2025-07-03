@@ -42,7 +42,7 @@ class ComicRequest(BaseModel):
     characters: str
 
 class GenerateComicRequest(BaseModel):
-    prompts: List[str]
+    prompts: List[dict]  # Each prompt is an object with description and dialogue
 
 class ComicResponse(BaseModel):
     success: bool
@@ -58,16 +58,14 @@ async def root():
 
 @app.post("/generate-prompts", response_model=ComicResponse)
 async def generate_prompts(request: ComicRequest):
-    """Generate 10 illustration prompts using ChatGPT based on user input"""
+    """Generate 10 illustration prompts and dialogue using ChatGPT based on user input"""
     try:
         logger.info(f"Generating prompts for genre: {request.genre}, setting: {request.setting}")
-        
         prompts = await chatgpt_service.generate_illustration_prompts(
             genre=request.genre,
             setting=request.setting,
             characters=request.characters
         )
-        
         return {
             "success": True,
             "message": "Prompts generated successfully",
@@ -82,43 +80,36 @@ async def generate_comic(request: GenerateComicRequest, background_tasks: Backgr
     """Generate comic images from prompts and return ZIP file (TEMP: only 2 images for dev)"""
     try:
         logger.info(f"Generating comic with {len(request.prompts)} prompts")
-        
-        # TEMP: Only use the first 2 prompts for faster dev/testing
         prompts_to_use = request.prompts[:2]
         if len(prompts_to_use) != 2:
             raise HTTPException(status_code=400, detail="Exactly 2 prompts are required for dev mode")
-        
         temp_dir = tempfile.mkdtemp(prefix="comic_")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        image_paths = await comic_generator.generate_images(
-            prompts=prompts_to_use,
-            output_dir=temp_dir
-        )
-        
+        # Extract descriptions and dialogues
+        descriptions = [p['description'] for p in prompts_to_use]
+        dialogues = [p['dialogue'] for p in prompts_to_use]
+        # Generate images with dialogue overlays
+        image_paths = []
+        for i, (desc, dialogue) in enumerate(zip(descriptions, dialogues)):
+            image_path = await comic_generator._generate_with_replicate(desc, temp_dir, i+1, dialogue)
+            image_paths.append(image_path)
         zip_filename = f"comic_{timestamp}.zip"
         zip_path = os.path.join(temp_dir, zip_filename)
-        
         with zipfile.ZipFile(zip_path, 'w') as zipf:
             for i, image_path in enumerate(image_paths):
                 if os.path.exists(image_path):
                     zipf.write(image_path, f"panel_{i+1:02d}.png")
-        
         pdf_filename = f"comic_{timestamp}.pdf"
         pdf_path = os.path.join(temp_dir, pdf_filename)
-        
         await pdf_generator.create_comic_pdf(
             image_paths=image_paths,
-            prompts=prompts_to_use,
+            prompts=descriptions,
             output_path=pdf_path
         )
-        
         with zipfile.ZipFile(zip_path, 'a') as zipf:
             zipf.write(pdf_path, pdf_filename)
-        
         await asyncio.sleep(1)
         background_tasks.add_task(cleanup_temp_files, temp_dir, 3600)
-        
         return ComicResponse(
             success=True,
             message="Comic generated successfully",
