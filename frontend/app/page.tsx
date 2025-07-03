@@ -14,13 +14,18 @@ interface ComicRequest {
   dialogues?: string[];
 }
 
+interface PanelPrompt {
+  description: string;
+  dialogue: string;
+}
+
 interface ComicResponse {
   success: boolean;
   message: string;
   zip_url?: string;
   pdf_url?: string;
   error?: string;
-  prompts?: string[];
+  prompts?: PanelPrompt[];
 }
 
 export default function Home() {
@@ -32,7 +37,7 @@ export default function Home() {
     dialogues: Array(2).fill(''), // For dev, 2 panels
   });
   
-  const [prompts, setPrompts] = useState<string[]>([]);
+  const [prompts, setPrompts] = useState<PanelPrompt[]>([]);
   const [isGeneratingPrompts, setIsGeneratingPrompts] = useState(false);
   const [isGeneratingComic, setIsGeneratingComic] = useState(false);
   const [comicResult, setComicResult] = useState<ComicResponse | null>(null);
@@ -244,79 +249,72 @@ export default function Home() {
 
           {/* Generated Prompts */}
           {prompts.length > 0 && (
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                Generated Prompts ({prompts.length}/10)
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mb-6">
+              <h3 className="text-lg font-semibold mb-2">Generated Prompts</h3>
+              <ol className="list-decimal pl-6">
                 {prompts.map((prompt, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-md">
-                    <div className="flex items-start gap-3">
-                      <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded-full">
-                        {index + 1}
-                      </span>
-                      <p className="text-gray-700 text-sm">{prompt}</p>
-                    </div>
-                  </div>
+                  <li key={index} className="mb-2">
+                    <div className="font-medium text-gray-800">{prompt.description}</div>
+                    <div className="text-blue-700 italic">{prompt.dialogue}</div>
+                  </li>
                 ))}
-              </div>
-
-              <button
-                onClick={generateComic}
-                disabled={isGeneratingComic}
-                className="w-full bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isGeneratingComic ? (
-                  <>
-                    <Loader2 className="animate-spin" size={20} />
-                    Generating Comic...
-                  </>
-                ) : (
-                  <>
-                    <FileText size={20} />
-                    Generate Comic (ZIP + PDF)
-                  </>
-                )}
-              </button>
+              </ol>
             </div>
           )}
 
-          {/* Results */}
-          {comicResult && comicResult.success && (
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                Comic Generated Successfully!
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {comicResult.zip_url && (
-                  <button
-                    onClick={() => downloadFile(comicResult.zip_url!, 'comic.zip')}
-                    className="bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
-                  >
-                    <Download size={20} />
-                    Download ZIP (Images + PDF)
-                  </button>
-                )}
-                
-                {comicResult.pdf_url && (
-                  <button
-                    onClick={() => downloadFile(comicResult.pdf_url!, 'comic.pdf')}
-                    className="bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 flex items-center justify-center gap-2"
-                  >
-                    <FileText size={20} />
-                    Download PDF Only
-                  </button>
-                )}
-              </div>
-              
-              <p className="text-gray-600 mt-4 text-center">
-                Your comic includes 10 AI-generated images with captions, assembled into a beautiful PDF!
-              </p>
-            </div>
-          )}
+          <button
+            onClick={generateComic}
+            disabled={isGeneratingComic}
+            className="w-full bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isGeneratingComic ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Generating Comic...
+              </>
+            ) : (
+              <>
+                <FileText size={20} />
+                Generate Comic (ZIP + PDF)
+              </>
+            )}
+          </button>
         </div>
+
+        {/* Results */}
+        {comicResult && comicResult.success && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">
+              Comic Generated Successfully!
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {comicResult.zip_url && (
+                <button
+                  onClick={() => downloadFile(comicResult.zip_url!, 'comic.zip')}
+                  className="bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
+                >
+                  <Download size={20} />
+                  Download ZIP (Images + PDF)
+                </button>
+              )}
+              
+              {comicResult.pdf_url && (
+                <button
+                  onClick={() => downloadFile(comicResult.pdf_url!, 'comic.pdf')}
+                  className="bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 flex items-center justify-center gap-2"
+                >
+                  <FileText size={20} />
+                  Download PDF Only
+                </button>
+              )}
+            </div>
+            
+            <p className="text-gray-600 mt-4 text-center">
+              Your comic includes 10 AI-generated images with captions, assembled into a beautiful PDF!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

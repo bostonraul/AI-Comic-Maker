@@ -44,13 +44,17 @@ class ComicRequest(BaseModel):
 class GenerateComicRequest(BaseModel):
     prompts: List[dict]  # Each prompt is an object with description and dialogue
 
+class PanelPrompt(BaseModel):
+    description: str
+    dialogue: str
+
 class ComicResponse(BaseModel):
     success: bool
     message: str
     zip_url: Optional[str] = None
     pdf_url: Optional[str] = None
     error: Optional[str] = None
-    prompts: Optional[List[str]] = None
+    prompts: Optional[List[PanelPrompt]] = None
 
 @app.get("/")
 async def root():
@@ -66,10 +70,12 @@ async def generate_prompts(request: ComicRequest):
             setting=request.setting,
             characters=request.characters
         )
+        # prompts is a list of dicts with description and dialogue
+        panel_prompts = [PanelPrompt(**p) for p in prompts]
         return {
             "success": True,
             "message": "Prompts generated successfully",
-            "prompts": prompts
+            "prompts": panel_prompts
         }
     except Exception as e:
         logger.error(f"Error generating prompts: {str(e)}")
